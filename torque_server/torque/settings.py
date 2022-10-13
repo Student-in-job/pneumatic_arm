@@ -119,5 +119,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-COM_PORT = 'COM13'
+COM_PORT = 'COM6'
 BAUD_RATE = 9600

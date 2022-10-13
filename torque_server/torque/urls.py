@@ -16,12 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from torque.views import ReceiveView, CancelView, ForceView, TorqueView
+from torque.views import ReceiveView, CancelView, ForceView, TorqueView, PressureView, TorquePressureView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/message/', ReceiveView.as_view(), name="receive"),
     path('api/v1/cancel/', CancelView.as_view(), name="cancel"),
     path('api/v1/newtons/', ForceView.as_view(), name="force"),
-    path('api/v1/torque/', TorqueView.as_view(), name="torque")
+    #path('api/v1/torque/', TorqueView.as_view(), name="torque"),
+    path('api/v1/torque/', TorquePressureView.as_view(), name="torque"),
+    path('api/v1/pressure/', PressureView.as_view(), name="pressure")
 ]

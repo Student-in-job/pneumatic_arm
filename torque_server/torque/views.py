@@ -86,6 +86,48 @@ class TorqueView(generics.GenericAPIView):
         ser.close()
         return Response({"result": "ok"}, status=status.HTTP_200_OK)
 
+class PressureView(generics.GenericAPIView):
+    serializer_class = NewtonsSerializer
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        pressure = serializer.data.get('message')
+        print(math.floor(pressure * 100))
+        
+        ser = serial.Serial(COM_PORT)
+        time.sleep(2)
+        ser.baudrate = BAUD_RATE
+
+        print(create_message2(pressure))
+        ser.write(str.encode(create_message2(pressure)))
+        ser.close()
+        return Response({"result": "ok"}, status=status.HTTP_200_OK)
+
+class TorquePressureView(generics.GenericAPIView):
+    serializer_class = NewtonsSerializer
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        torque = serializer.data.get('message')
+        print(torque)
+        print(torque_to_force(float(torque)))
+        expected_psi = linear2(torque_to_force(float(torque)))
+        print(expected_psi)
+
+        ser = serial.Serial(COM_PORT)
+        time.sleep(2)
+        ser.baudrate = BAUD_RATE
+        print(create_message2(expected_psi))
+        ser.write(str.encode(create_message2(expected_psi)))
+        ser.close()
+        return Response({"result": "ok"}, status=status.HTTP_200_OK)
+
 def linear(newtons):
     #a = 8.813267581
     #b = 1.369069361
@@ -93,6 +135,10 @@ def linear(newtons):
     b = 24.3214
     return a * newtons + b
 
+def linear2(newtons):
+    a = 0.3645
+    b = 5.7736
+    return a * newtons + b
 
 def exponent(newtons):
     a = 0.048080292247692
@@ -104,6 +150,9 @@ def create_message(exponent_value):
     exponent_value = math.floor(exponent_value)
     return message_from_int(exponent_value)
 
+def create_message2(exponent_value):
+    exponent_value = math.floor(exponent_value * 100)
+    return message_from_int2(exponent_value)
 
 def message_from_int(value):
     if 999 < value <= 9999:
@@ -114,6 +163,17 @@ def message_from_int(value):
         message = '#100%s' % value
     else:
         message = '#1000%s' % value
+    return message
+
+def message_from_int2(value):
+    if 999 < value <= 9999:
+        message = '#%s' % value
+    elif 99 < value <= 1000:
+        message = '#0%s' % value
+    elif 9 < value <= 100:
+        message = '#00%s' % value
+    else:
+        message = '#000%s' % value
     return message
 
 def torque_to_force(torque):

@@ -108,6 +108,7 @@ namespace torque_client
         {
             if (!Connected)
             {
+                comPortName = this.cmbPort.SelectedItem.ToString();
                 comPort.PortName = comPortName;
                 comPort.BaudRate = int.Parse(this.txtBaudRate.Text);
                 comPort.Open();
@@ -214,9 +215,76 @@ namespace torque_client
             }
         }
 
+        private void InitTextboxes(float start, float step, float end)
+        {
+            int count = (int)((end - start) / step) + 1;
+            foreach (string name in this.TimeControllerList)
+            {
+                UnregisterName(name);
+            }
+            foreach (string name in this.ForceControllerList)
+            {
+                UnregisterName(name);
+            }
+            this.TimeControllerList.Clear();
+            this.ForceControllerList.Clear();
+            int top = 10;
+            int left = 10;
+            int increment_left = 150;
+            int increment_top = 30;
+            int width = 50;
+            int column = 0;
+            int row = 1;
+            this.Calc_columns(count);
+            this.controlContainer.Children.Clear();
+            for (int i = 1; i <= count; i++)
+            {
+                TextBox txtTime = new TextBox();
+                txtTime.Text = start.ToString();
+                txtTime.Width = width;
+                txtTime.FontSize = 14;
+                Canvas.SetLeft(txtTime, column * increment_left + left);
+                Canvas.SetTop(txtTime, top);
+                txtTime.Name = "txtTime" + i.ToString();
+                txtTime.IsReadOnly = true;
+                RegisterName(txtTime.Name, txtTime);
+                this.controlContainer.Children.Add(txtTime);
+                this.TimeControllerList.Add(txtTime.Name);
+                TextBox txtForce = new TextBox();
+                txtForce.Width = width;
+                txtForce.FontSize = 14;
+                //float f = (float)start / 121;
+                //txtForce.Text = f.ToString();
+                Canvas.SetLeft(txtForce, column * increment_left + 70);
+                Canvas.SetTop(txtForce, top);
+                txtForce.Name = "txtForce" + i.ToString();
+                RegisterName(txtForce.Name, txtForce);
+                this.ForceControllerList.Add(txtForce.Name);
+                this.controlContainer.Children.Add(txtForce);
+                if (row == columns[column])
+                {
+                    top = 10;
+                    column++;
+                    row = 1;
+                }
+                else
+                {
+                    top += increment_top;
+                    row++;
+                }
+                start += step;
+
+            }
+            int container_height = columns[0] * increment_top + 60;
+            if (container_height > controlContainer.Height)
+            {
+                controlContainer.Height = container_height;
+            }
+        }
+
         private void btnGenerate_Click(object sender, RoutedEventArgs e)
         {
-            InitTextboxes(int.Parse(this.txtStart.Text), int.Parse(this.txtStep.Text), int.Parse(this.txtEnd.Text));
+            InitTextboxes(float.Parse(this.txtStart.Text), float.Parse(this.txtStep.Text), float.Parse(this.txtEnd.Text));
             this.btnStart.IsEnabled = true;
         }
 
@@ -246,7 +314,8 @@ namespace torque_client
             }
             else
             {
-                request = (HttpWebRequest)WebRequest.Create(url + "message/");
+                //request = (HttpWebRequest)WebRequest.Create(url + "message/");
+                request = (HttpWebRequest)WebRequest.Create(url + "pressure/");
                 request.Method = "POST";
                 request.Timeout = 30 * 1000;
                 request.ContentType = "application/x-www-form-urlencoded";
@@ -280,9 +349,9 @@ namespace torque_client
             foreach (string value in timeValues)
             {
                 this.Send_Post(value);
-                Thread.Sleep(2000);
+                Thread.Sleep(4000);
                 this.Send_Post(IsGet: true);
-                Thread.Sleep(3000);
+                Thread.Sleep(2000);
                 progress += step;
                 (sender as BackgroundWorker).ReportProgress(progress);
             }
