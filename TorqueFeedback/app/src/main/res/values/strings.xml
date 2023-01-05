@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">TorqueFeedback</string>
+    <string name="time">Time</string>
+    <string name="newtons">Force</string>
+</resources>
